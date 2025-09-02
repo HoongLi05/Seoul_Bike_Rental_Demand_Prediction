@@ -165,9 +165,9 @@ st.markdown("Predict the number of bikes that will be rented based on weather an
 
 # Display model status
 if model_loaded:
-    st.success(model_status)
+    st.toast(model_status, icon="✅")
 else:
-    st.warning(model_status)
+    st.toast(model_status, icon="⚠️")
 
 st.markdown("---")
 
