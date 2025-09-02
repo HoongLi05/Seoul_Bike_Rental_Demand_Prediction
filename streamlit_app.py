@@ -60,7 +60,76 @@ def load_models():
 best_model, ranges, model_status, model_loaded = load_models()
 
 # ==============================
-# Sidebar Inputs
+# Validation
+# ==============================
+def validate_inputs(temperature, humidity, rainfall, visibility, hour, season):
+    """Validate logical consistency of input parameters"""
+    warnings = []
+    
+    # 1. Season-Temperature Consistency Check
+    season_temp_ranges = {
+        "Winter": (-18, 15),    # Reasonable winter temperature range
+        "Spring": (5, 25),      # Reasonable spring temperature range
+        "Summer": (15, 40),     # Reasonable summer temperature range
+        "Autumn": (0, 25)       # Reasonable autumn temperature range
+    }
+    
+    temp_min, temp_max = season_temp_ranges[season]
+    if temperature < temp_min or temperature > temp_max:
+        warnings.append(f"⚠️ Anomaly: {season} temperatures typically range from {temp_min}°C to {temp_max}°C")
+    
+    # 2. Season-Rainfall Consistency Check
+    if season == "Winter" and rainfall > 2.0:
+        warnings.append("⚠️ Anomaly: Winter typically has less rainfall, please verify rainfall input")
+    elif season == "Summer" and rainfall > 0 and rainfall < 0.5:
+        warnings.append("ℹ️ Note: Summer often has higher rainfall, please confirm input")
+    
+    # 3. Temperature-Humidity Consistency Check
+    if temperature > 30 and humidity > 85:
+        warnings.append("⚠️ Anomaly: High temperatures usually accompany lower humidity levels")
+    if temperature < 0 and humidity > 95:
+        warnings.append("ℹ️ Note: Low temperature with high humidity may indicate snow or icy conditions")
+    
+    # 4. Visibility-Weather Consistency Check
+    if rainfall > 2.0 and visibility > 1500:
+        warnings.append("⚠️ Anomaly: Heavy rain typically reduces visibility significantly")
+    if rainfall == 0 and visibility < 300:
+        warnings.append("ℹ️ Note: No rain but low visibility may indicate fog or pollution")
+    
+    # 5. Time-Season Consistency Check
+    if (hour < 5 or hour > 21) and season == "Winter":
+        warnings.append("ℹ️ Note: Nighttime hours in winter typically have lower demand")
+    
+    return warnings
+
+def get_seasonal_recommendations(season, temperature, rainfall):
+    """Provide seasonal recommendations based on conditions"""
+    recommendations = []
+    
+    if season == "Winter":
+        if temperature < 0:
+            recommendations.append("❄️ Temperature below freezing - suggest alerting users about icy roads")
+        if rainfall > 0:
+            recommendations.append("🌧️ Winter rainfall - demand may decrease significantly")
+            
+    elif season == "Summer":
+        if temperature > 30:
+            recommendations.append("🔥 High temperature - consider adding water stations")
+        if rainfall > 2.0:
+            recommendations.append("⛈️ Summer storm - demand may drop temporarily but recover after rain")
+            
+    elif season == "Spring":
+        if temperature > 18 and rainfall == 0:
+            recommendations.append("🌼 Pleasant spring weather - expect higher demand")
+            
+    elif season == "Autumn":
+        if temperature < 10:
+            recommendations.append("🍂 Cool autumn weather - good conditions for cycling")
+    
+    return recommendations
+
+# ==============================
+# Sidebar Inputs (Enhanced)
 # ==============================
 with st.sidebar:
     st.title("🚲 Input Parameters")
@@ -69,13 +138,22 @@ with st.sidebar:
     st.subheader("Weather Conditions")
     temperature = st.slider("Temperature (°C)", -18.0, 40.0, 20.0, 0.1)
     humidity = st.slider("Humidity (%)", 0.0, 100.0, 60.0, 1.0)
-    rainfall = st.slider("Rainfall (mm)", 0.0, 5.0, 0.0, 0.1)
+    rainfall = st.slider("Rainfall (mm)", 0.0, 10.0, 0.0, 0.1)  # Extended to 10mm
     visibility = st.slider("Visibility (m)", 0.0, 2000.0, 2000.0, 10.0)
 
     st.subheader("Time & Season")
     hour = st.slider("Hour of the Day", 0, 23, 8)
-    season = st.selectbox("Season", ["Winter", "Autumn", "Spring", "Summer"])
-
+    season = st.selectbox("Season", ["Winter", "Spring", "Summer", "Autumn"])
+    
+    # Real-time validation button
+    if st.button("Validate Inputs", help="Check input parameters for logical consistency"):
+        warnings = validate_inputs(temperature, humidity, rainfall, visibility, hour, season)
+        if warnings:
+            for warning in warnings:
+                st.warning(warning)
+        else:
+            st.success("✓ Input parameters are logically consistent")
+    
     if st.button("Reset to Default Values"):
         st.rerun()
 
@@ -122,6 +200,21 @@ col1, col2 = st.columns([2, 1])
 
 with col1:
     if st.button("Predict Demand", type="primary", use_container_width=True):
+        # Input validation before prediction
+        validation_warnings = validate_inputs(temperature, humidity, rainfall, visibility, hour, season)
+        recommendations = get_seasonal_recommendations(season, temperature, rainfall)
+        
+        # Display validation results
+        if validation_warnings:
+            with st.expander("⚠️ Input Validation Warnings", expanded=True):
+                for warning in validation_warnings:
+                    st.warning(warning)
+        
+        if recommendations:
+            with st.expander("💡 Seasonal Recommendations", expanded=True):
+                for recommendation in recommendations:
+                    st.info(recommendation)
+                    
         with st.spinner("Predicting..."):
             time.sleep(0.5)  # better UX
 
