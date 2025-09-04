@@ -39,7 +39,7 @@ def load_models():
             best_model = model_data
 
 
-        return best_model, ranges, "✓ Model loaded successfully!", True
+        return best_model, ranges, "✓ Gradient Boosting Model loaded successfully!", True
 
 
     except Exception as e:
