@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import GradientBoostingRegressor  
 import time
 
 # ==============================
@@ -51,7 +51,7 @@ def load_models():
 
         fallback_model = Pipeline([
             ('preprocess', preprocessor),
-            ('regressor', DecisionTreeRegressor(random_state=42))
+            ('regressor', GradientBoostingRegressor(random_state=42))
         ])
 
         return fallback_model, None, "⚠️ Using fallback model due to loading error", False
