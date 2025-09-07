@@ -152,7 +152,7 @@ with st.sidebar:
     st.subheader("Weather Conditions")
     temperature = st.slider("Temperature (°C)", -18.0, 40.0, 20.0, 0.1)
     humidity = st.slider("Humidity (%)", 0.0, 100.0, 60.0, 1.0)
-    rainfall = st.slider("Rainfall (mm)", 0.0, 10.0, 0.0, 0.1)  # Extended to 10mm
+    rainfall = st.slider("Rainfall (mm)", 0.0, 35.0, 0.0, 0.1)
     visibility = st.slider("Visibility (m)", 0.0, 2000.0, 2000.0, 10.0)
 
 
